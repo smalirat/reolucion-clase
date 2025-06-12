@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const app = express();
+app.set('trust proxy', true);
+
 app.use(bodyParser.json());
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -10,58 +12,48 @@ app.use(cors({
 
 const PORT = 9000;
 
-// Array global para guardar todas las comparaciones con IP
-const comparisons = [];
+const comparisons = {};
 
 app.post('/comparison', (req, res) => {
   const { izquierda, derecha } = req.body;
-  const ip = req.socket.remoteAddress;
+  const ip = req.ip;
   const date = new Date();
 
-  comparisons.push({ ip, izquierda, derecha, date });
+  comparisons[ip] = { izquierda, derecha, date };
   res.status(201).json({ message: 'OK' });
 });
 
 app.get('/comparison', (req, res) => {
-  const ip = req.socket.remoteAddress;
-
-  const lastComparison = [...comparisons].reverse().find(c => c.ip === ip);
-
-  if (lastComparison) {
-    res.status(200).json({
-      izquierda: lastComparison.izquierda,
-      derecha: lastComparison.derecha,
-    });
-  } else {
-    res.status(200).json({ izquierda: 0, derecha: 0 });
-  }
+  const ip = req.ip; // Usa req.ip también aquí
+  res.status(200).json(comparisons[ip] || {
+    izquierda: 0, derecha: 0
+  });
 });
 
 app.get('/stats', (req, res) => {
-  const resumen = {};
-
-  for (const comp of comparisons) {
-    const ip = comp.ip;
-
-    let ganador = null;
-    if (comp.izquierda > comp.derecha) {
-      ganador = "izquierda";
-    } else if (comp.derecha > comp.izquierda) {
-      ganador = "derecha";
+  const individualResults = [];
+  for (const ip in comparisons) {
+    if (comparisons.hasOwnProperty(ip)) {
+      const { izquierda, derecha, date } = comparisons[ip];
+      let result;
+      if (izquierda > derecha) {
+        result = 'izquierda gana';
+      } else if (derecha > izquierda) {
+        result = 'derecha gana';
+      } else {
+        result = 'empate';
+      }
+      individualResults.push({
+        ip,
+        izquierda,
+        derecha,
+        date: date.toISOString(),
+        result,
+      });
     }
-
-    if (!ganador) continue;
-
-    if (!resumen[ip]) {
-      resumen[ip] = { izquierda: 0, derecha: 0 };
-    }
-
-    resumen[ip][ganador]++;
   }
-
-  res.status(200).json(resumen);
+  res.status(200).json(individualResults);
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
