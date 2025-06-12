@@ -1,0 +1,8 @@
+Hasta las 11:
+Hasta ahora venimos llevando registro de la cantidad de clicks.
+Nos gustaría ahora llevar registro de dónde se hizo el click, es decir, guardar también la lista de dónde se hizo click.
+Todo esto también se tiene que mandar al servidor.
+Queremos que haya una ruta /stats que me dé las estadísticas de quienes ganan a lo largo de todas las direcciones IP.
+Vamos a trabajar por aulas partidas.
+Súper desafío: incorporar un componente nuevo, que se muestre al lado del comparador, que por cada click que se produce,
+ pinte un puntito en el área correspondiente (div y span, canvas)
