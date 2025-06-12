@@ -24,7 +24,7 @@ app.post('/comparison', (req, res) => {
 });
 
 app.get('/comparison', (req, res) => {
-  const ip = req.ip; // Usa req.ip también aquí
+  const ip = req.ip;
   res.status(200).json(comparisons[ip] || {
     izquierda: 0, derecha: 0
   });
